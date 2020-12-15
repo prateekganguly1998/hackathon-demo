@@ -35,7 +35,15 @@ function imageReady(){
     poseNet.on('pose', function (results) {
         poses = results;
         console.log(poses);
+        console.log(normalizeVectorCoord(3,4))
     });
+}
+function normalizeVectorCoord(x,y)
+{
+    let rootSumofSquares=Math.sqrt(x*x+y*y);  
+    let newX=x/rootSumofSquares;
+    let newY=y/rootSumofSquares;
+    return {x:newX,y:newY};
 }
 // when poseNet is ready, do the detection
 function modelReady() {
