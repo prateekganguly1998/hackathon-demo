@@ -41,7 +41,7 @@ color_code = {
     'leftAnkle': 9,
     'rightAnkle': 9
     }
-    var PredictedVal = {}
+    
     let IdealVal = {
     'nose': null,
     'leftEye': null,
@@ -61,6 +61,25 @@ color_code = {
     'leftAnkle': null,
     'rightAnkle': null
     }
+    let PredictedVal={
+        'nose': null,
+    'leftEye': null,
+    'rightEye': null,
+    'leftEar': null,
+    'rightEar': null,
+    'leftShoulder': null,
+    'rightShoulder': null,
+    'leftElbow': null,
+    'rightElbow':null ,
+    'leftWrist':null,
+    'rightWrist':null,
+    'leftHip': null,
+    'rightHip': null,
+    'leftKnee': null,
+    'rightKnee': null,
+    'leftAnkle': null,
+    'rightAnkle': null
+    };
     var ComparisonResult = [];
     var ValueStore = { 
         'pred' : {}, 
@@ -134,6 +153,7 @@ function image2Ready()
             }
         
             } 
+            IdealVal=normalizeVectorCoord(IdealVal);
     });
 }
 function model2Ready() {
@@ -143,25 +163,11 @@ function model2Ready() {
     // If/When a pose is detected, poseNet.on('pose', ...) will be listening for the detection results 
     // in the draw() loop, if there are any poses, then carry out the draw commands
     poseNet2.singlePose(img2)
-    
+   
     // comparePoses() 
 }
 // when the image is ready, then load up poseNet
-function imageReady(){
-    // set some options
-    let options = {
-        inputResolution: 513,
-        minConfidence: 0.1,
-        architecture:'ResNet50',
-        outputStride:32
-    }
-    
-    // assign poseNet
-   // poseNet = ml5.poseNet(modelReady, options);
 
-    // This sets up an event that listens to 'pose' events
-   // poseNet.on('pose',gotPoses);
-}
 function gotPoses(poses)
 {
   //  console.log(poses);
@@ -169,32 +175,48 @@ function gotPoses(poses)
     {
         pose=poses[0].pose;
         skeleton=poses[0].skeleton;
+      
     }
+    
+    for(let i=0;i<17;i++)
+    {
+         PredictedVal[pose.keypoints[i].part]=pose.keypoints[i]
+       // console.log(pose.keypoints);
+    }
+    
+    // // console.log(PredictedVal);
+    // 
+  
 }
 function modelLoaded()
 { select('#status').html('Model Loaded');
     console.log(`Posenet is ready`);
     //IdealVal is valid here//
-   // console.log(IdealVal);
-    IdealVal=normalizeVectorCoord(IdealVal);
-   // console.log(IdealVal);
-    comparePoses() 
+   
+   //console.log(IdealVal);
+   
+   setInterval(function()
+   { 
+    PredictedVal=normalizeVectorCoord(PredictedVal);
+    comparePoses();
+   },3000);
+ 
     
 }
 function normalizeVectorCoord(Val) 
 { 
    
-// /console.log(Val) 
-        let x,i,y; 
+ console.log(Val) 
+        let x,y; 
         x= 0; 
         y = 0; 
-        for(i=0; i< 17;i++){ 
+        for(let i=0; i< 17;i++){ 
         // console.log(color_code_keys[i]) 
-        if(Val[color_code_keys[i]])
-        {
             x += Math.pow(Val[color_code_keys[i]].position.x,2) //*Val[color_code_keys[i]].position.x // console.log('Y',Val[color_code_keys[i]].position.y) 
-            y += Math.pow(Val[color_code_keys[i]].position.y,2) ///Val[color_code_keys[i]].position.y } 
+            y += Math.pow(Val[color_code_keys[i]].position.y,2) ///Val[color_code_keys[i]].position.y 
+        } 
             let rootSumofSquares=Math.sqrt(x+y); 
+        
             // console.log(rootSumofSquares,x,y) 
             // let tx=0,ty=0; 
             for(i=0; i< 17;i++){ 
@@ -204,10 +226,9 @@ function normalizeVectorCoord(Val)
             // console.log('X',Val[color_code_keys[i]].position.x) 
             // console.log('Y',Val[color_code_keys[i]].position.y)
             } 
-        }
+    
 
         // console.log('TTTTT',tx,ty,tx+ty) // IdealVal = PredictedVal return Val 
-        }
        // console.log(Val);
         return Val;
 }   
@@ -231,12 +252,11 @@ function draw()
         {
             let x=pose.keypoints[i].position.x;
             let y=pose.keypoints[i].position.y;
-            PredictedVal[pose.keypoints[i].part] = pose.keypoints[i] ;
-           
+            
             fill(237,191,76);
             ellipse(x,y,12,12)
         }
-       
+
         for(let i=0;i<skeleton.length;i++)
         {
 
@@ -246,6 +266,7 @@ function draw()
             stroke('red');
             line(cord1.position.x,cord1.position.y,cord2.position.x,cord2.position.y)
         }
+       // PredictedVal=normalizeVectorCoord(PredictedVal);
     }
     
 }
@@ -258,7 +279,7 @@ function drawKeypoints() {
         for (let j = 0; j < pose.keypoints.length; j++) {
             // A keypoint is an object describing a body part (like rightArm or leftShoulder)
             let keypoint = pose.keypoints[j];
-           
+           // PredictedVal[keypoint.part]=keypoint;
             // Only draw an ellipse is the pose probability is bigger than 0.2
             if (keypoint.score > 0.2) {
                 fill(255);
@@ -289,9 +310,8 @@ function drawSkeleton() {
 //pose comparison code
 function comparePoses() { 
    
-    setTimeout(function(){
-        let epsilon = -99; 
-        console.log(Object.keys(PredictedVal));
+        // let epsilon = -99; 
+       // console.log(Object.keys(PredictedVal));
         let i; 
         ComparisonResult = []; 
         let diffx = 0; 
@@ -301,28 +321,30 @@ function comparePoses() {
         for(i = 0; i<17 ; i++){ 
         let temp = []; 
         temp.push(priority[color_code_keys[i]]); 
-        // temp.push(color_code_keys[i]); 
+         temp.push(color_code_keys[i]); 
         diffx = (IdealVal[color_code_keys[i]].position.x - PredictedVal[color_code_keys[i]].position.x ) 
         diffy = (IdealVal[color_code_keys[i]].position.y - PredictedVal[color_code_keys[i]].position.y) 
-        // console.log(PredictedVal[color_code_keys[i]],IdealVal[color_code_keys[i]]) if(diffx > epsilon){ 
+        // console.log(PredictedVal[color_code_keys[i]],IdealVal[color_code_keys[i]]) 
+        if(diffx){ 
         temp.push(diffx) 
-        console.log(temp);
         } 
-        // else{ 
-        // diffx = 0 
-        // temp.push(diffx) 
-        // } 
-        if(diffy > epsilon){ 
+        else{ 
+        diffx = 0 
+        temp.push(diffx) 
+        } 
+
+        if(diffy){ 
         temp.push(diffy) 
         } 
         else{ 
         diffy = 0 
         temp.push(diffy) 
         }
+
         if(diffy != 0 || diffx != 0){ 
         ComparisonResult.push(temp) 
         } 
-        
+    }
         // console.log(ComparisonResult) 
         /* ComparisonResult = [ 
         [6,657], 
@@ -336,6 +358,6 @@ function comparePoses() {
         return a[0] - b[0]; 
         }); 
         console.log(ComparisonResult) 
-    },2000)
+    
    
     }
