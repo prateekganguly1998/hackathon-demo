@@ -1,14 +1,17 @@
-let img; let poseNet; let poses = [];
+let img;let img2;
+ let poseNet;let poseNet2; let poses = [],poses2=[];
 let trainDirs=['tree','downdog','plank','goddess','warrior2'];
 function setup() {
     
-    img = createImg('https://static.toiimg.com/photo/msid-69885314/69885314.jpg', imageReady);
+    img = createImg('https://static.toiimg.com/thumb/msid-7647039,width-800,height-600,resizemode-75/7647039.jpg', imageReady);
     img.size(640,480);
     img.elt.crossOrigin="Anonymous";
     img.style('z-index','-5');
     img.style('position','absolute')
     createCanvas(img.width,img.height);
-    img2=createImg('https://static.toiimg.com/photo/msid-69885314/69885314.jpg');
+    // leftBuffer=createGraphics(640,480);
+    // rightBuffer=createGraphics(640,480);
+    img2=createImg('https://static.toiimg.com/photo/msid-69885314/69885314.jpg',image2Ready);
     img2.size(640,480);
     // img2.style('margin-left','640px');
     // img2.style('margin-top','-480px');
@@ -16,7 +19,37 @@ function setup() {
     img2.style('position','absolute')
    
     //img.hide(); // hide the image in the browser
-    frameRate(1); // set the frameRate to 1 since we don't need it to be running quickly in this case
+   // frameRate(1); // set the frameRate to 1 since we don't need it to be running quickly in this case
+}
+
+function image2Ready()
+{
+    console.log(img2);
+    let options = {
+        inputResolution: 513,
+        minConfidence: 0.1,
+        architecture:'ResNet50',
+        outputStride:32
+    }
+    
+    // assign poseNet
+    poseNet2 = ml5.poseNet(model2Ready, options);
+
+    // This sets up an event that listens to 'pose' events
+    poseNet2.on('pose', function (results) {
+        poses2 = results;
+        console.log(poses2);
+        console.log(normalizeVectorCoord(3,4))
+    });
+}
+function model2Ready() {
+    //select('#status').html('Model Loaded');
+    
+    // When the model is ready, run the singlePose() function...
+    // If/When a pose is detected, poseNet.on('pose', ...) will be listening for the detection results 
+    // in the draw() loop, if there are any poses, then carry out the draw commands
+    poseNet2.singlePose(img2)
+   
 }
 // when the image is ready, then load up poseNet
 function imageReady(){
@@ -53,6 +86,7 @@ function modelReady() {
     // If/When a pose is detected, poseNet.on('pose', ...) will be listening for the detection results 
     // in the draw() loop, if there are any poses, then carry out the draw commands
     poseNet.singlePose(img)
+   
 }
 // draw() will not show anything until poses are found
 function draw() {
