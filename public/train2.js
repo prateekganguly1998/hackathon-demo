@@ -91,11 +91,7 @@ color_code = {
         color_code_keys = Object.keys(color_code); 
     
 function setup() {
-    // img = createImg('https://static.toiimg.com/thumb/msid-7647039,width-800,height-600,resizemode-75/7647039.jpg', imageReady);
-    // img.size(640,480);
-    // img.elt.crossOrigin="Anonymous";
-    // img.style('z-index','-5');
-    // img.style('position','absolute')
+  
     speech= new SpeechSynthesisUtterance();
     speech.lang = "en-US";
     speech.volume = 1;
@@ -104,6 +100,15 @@ function setup() {
     createCanvas(640,480);
     video=createCapture(VIDEO);
     video.hide();
+
+    //timer stuff//
+    const now=new Date().getTime()
+    const deadLine= new Date(now+5*60000).getTime();
+    let t=deadLine - now;
+    let minutes=Math.floor((t%(1000*60*60))/(1000*60))
+    let seconds=Math.floor((t%(1000*60))/(1000*60));
+    console.log(`${minutes}: ${seconds}`);
+    //--------------------//
     let poseNetOptions={
         
         inputResolution: 513,
@@ -118,19 +123,13 @@ function setup() {
        }
     poseNet=ml5.poseNet(video,modelLoaded,poseNetOptions);
     poseNet.on('pose',gotPoses);
-    // leftBuffer=createGraphics(640,480);
-    // rightBuffer=createGraphics(640,480);
+    //set the dynamic image link here in image 2//
     img2=createImg('https://www.verywellfit.com/thmb/Sgy_FHtDtEl8wctggFasfjH3rhg=/3000x2000/filters:fill(FFDB5D,1)/About-50-4111744-Tree-Pose02-641-5c4b762cc9e77c00016f33b6.jpg',image2Ready);
     img2.size(640,480);
-    // img2.style('margin-left','640px');
-    // img2.style('margin-top','-480px');
+    
     img2.elt.crossOrigin="Anonymous";
     img2.style('position','absolute');
   
-    // assign poseNet
-    
-    //img.hide(); // hide the image in the browser
-   // frameRate(1); // set the frameRate to 1 since we don't need it to be running quickly in this case
 }
 
 function image2Ready()
@@ -226,38 +225,60 @@ function modelLoaded()
             }
         }
 //        console.log('Part',isPartProper);
-            for(i = 5; i < 17; i++){
-              //  console.log(result[i][1]+" "+result[i][2]+" "+result[i][3]);
-                if(result[i][2]>epsilon ||result[i][2]<-epsilon&&result[i][3]>epsilon||result[i][3]<-epsilon)
-                {
-    
-                    if(abs(result[i][2]) > abs(result[i][3])){
-                        if(result[i][2]>0){
-                            speech.text = "Move your "+result[i][1]+" to the right";
-                             window.speechSynthesis.speak(speech);
-                        }
-                        else{
-                            speech.text = "Move your "+result[i][1]+" to the left";
-                             window.speechSynthesis.speak(speech);
-                        }
-                    }
-                    else{
-                        if(result[i][3]>0){
-                            speech.text = "Move your "+result[i][1]+" down";
-                             window.speechSynthesis.speak(speech);
-                        }
-                        else{
-                            speech.text = "Move your "+result[i][1]+" up";
-                             window.speechSynthesis.speak(speech);
-                        }
-                    }
-                }
-            }
+           speech.text=giveInstructions(result);
+           if(speech.text!=="undefined")
+           {
+            window.speechSynthesis.speak(speech)
+           }
+           else
+           {
+               //timer condition//
+               //increment timer iterator
+               //if equal to the provided time//
+               //go to next pose//
+           }
+         
+
+
+          
     
     })
    },3000);
  
-    
+    function giveInstructions(result)
+    {
+        let temp
+        for(i = 5; i < 17; i++){
+            //  console.log(result[i][1]+" "+result[i][2]+" "+result[i][3]);
+            
+              if(result[i][2]>epsilon ||result[i][2]<-epsilon&&result[i][3]>epsilon||result[i][3]<-epsilon)
+              {
+  
+                  if(abs(result[i][2]) > abs(result[i][3])){
+                      if(result[i][2]>0){
+                          temp="Move your "+result[i][1]+" to the right";
+                          
+                      }
+                      else{
+                          temp="Move your "+result[i][1]+" to the left";
+                          
+                      }
+                  }
+                  else{
+                      if(result[i][3]>0){
+                          temp="Move your "+result[i][1]+" down";
+                           
+                      }
+                      else{
+                          temp="Move your "+result[i][1]+" up";
+                        
+                      }
+                  }
+              }
+          }
+
+          return temp;
+    }
 }
 function normalizeVectorCoord(Val) 
 { 
@@ -267,25 +288,20 @@ function normalizeVectorCoord(Val)
         x= 0; 
         y = 0; 
         for(let i=0; i< 17;i++){ 
-        // console.log(color_code_keys[i]) 
+   
             x += Math.pow(Val[color_code_keys[i]].position.x,2) //*Val[color_code_keys[i]].position.x // console.log('Y',Val[color_code_keys[i]].position.y) 
             y += Math.pow(Val[color_code_keys[i]].position.y,2) ///Val[color_code_keys[i]].position.y 
         } 
             let rootSumofSquares=Math.sqrt(x+y); 
         
-            // console.log(rootSumofSquares,x,y) 
-            // let tx=0,ty=0; 
             for(i=0; i< 17;i++){ 
-            // console.log(color_code_keys[i]) 
             Val[color_code_keys[i]].position.x = Val[color_code_keys[i]].position.x/rootSumofSquares;
             Val[color_code_keys[i]].position.y = Val[color_code_keys[i]].position.y/rootSumofSquares // tx += Val[color_code_keys[i]].position.x*Val[color_code_keys[i]].position.x // ty += Val[color_code_keys[i]].position.y*Val[color_code_keys[i]].position.y // console.log(tx+ ' ' + ty) 
-            // console.log('X',Val[color_code_keys[i]].position.x) 
-            // console.log('Y',Val[color_code_keys[i]].position.y)
+     
             } 
     
 
-        // console.log('TTTTT',tx,ty,tx+ty) // IdealVal = PredictedVal return Val 
-       // console.log(Val);
+       
         return Val;
 }   
 // when poseNet is ready, do the detection
@@ -330,16 +346,7 @@ function draw()
             ellipse(x,y,12,12)
         }
 
-        // for(let i=0;i<skeleton.length;i++)
-        // {
-
-        //     let cord1=skeleton[i][0];
-        //     let cord2=skeleton[i][1];
-        //     strokeWeight(3);
-        //     stroke('red');
-        //     line(cord1.position.x,cord1.position.y,cord2.position.x,cord2.position.y)
-        // }
-       // PredictedVal=normalizeVectorCoord(PredictedVal);
+       
     }
     
 }
@@ -431,8 +438,7 @@ function comparePoses() {
         }); 
        return resolve(ComparisonResult);
     })
-        // let epsilon = -99; 
-       // console.log(Object.keys(PredictedVal));
+       
        
     
    
