@@ -2,6 +2,8 @@ let img2;
 let video;
 let poseNet;let poseNet2; 
 let poses2=[];
+let isPartProper=[];
+let epsilon=0.05;
 let pose;
 color_code = {
     'nose': [0,0,0],
@@ -113,7 +115,7 @@ function setup() {
     poseNet.on('pose',gotPoses);
     // leftBuffer=createGraphics(640,480);
     // rightBuffer=createGraphics(640,480);
-    img2=createImg('https://static.toiimg.com/photo/msid-69885314/69885314.jpg',image2Ready);
+    img2=createImg('https://www.gaia.com/wp-content/uploads/ChairPose-NicoLuce-768x432.jpg',image2Ready);
     img2.size(640,480);
     // img2.style('margin-left','640px');
     // img2.style('margin-top','-480px');
@@ -198,7 +200,28 @@ function modelLoaded()
    setInterval(function()
    { 
     PredictedVal=normalizeVectorCoord(PredictedVal);
-    comparePoses();
+   let comparePosePromise= comparePoses();
+   comparePosePromise.then(result=>
+    {
+        console.log(result);
+        isPartProper=[];
+        for(let i=0;i<17;i++)
+        {
+          
+            //console.log(result[i][2], epsilon);
+            console.log(result[i][2],result[i][3],epsilon);
+            if(result[i][2]>epsilon ||result[i][2]<-epsilon&&result[i][3]>epsilon||result[i][3]<-epsilon)
+            {
+                
+                isPartProper.push({part:result[i][1],value:false});
+            }
+            else
+            {
+                isPartProper.push({part:result[i][1],value:true});
+            }
+        }
+        console.log(isPartProper);
+    })
    },3000);
  
     
@@ -252,20 +275,37 @@ function draw()
         {
             let x=pose.keypoints[i].position.x;
             let y=pose.keypoints[i].position.y;
-            
-            fill(237,191,76);
+            //console.log(isPartProper[i])
+            if(isPartProper.length>0)
+            {
+                if(isPartProper[i].value)
+            {
+                fill(0,255,0);
+            }
+            else
+            {
+                fill(255,0,0);
+            }  
+            }
+            else
+            { 
+                fill(237,191,76);
+
+            }
+           
+           
             ellipse(x,y,12,12)
         }
 
-        for(let i=0;i<skeleton.length;i++)
-        {
+        // for(let i=0;i<skeleton.length;i++)
+        // {
 
-            let cord1=skeleton[i][0];
-            let cord2=skeleton[i][1];
-            strokeWeight(3);
-            stroke('red');
-            line(cord1.position.x,cord1.position.y,cord2.position.x,cord2.position.y)
-        }
+        //     let cord1=skeleton[i][0];
+        //     let cord2=skeleton[i][1];
+        //     strokeWeight(3);
+        //     stroke('red');
+        //     line(cord1.position.x,cord1.position.y,cord2.position.x,cord2.position.y)
+        // }
        // PredictedVal=normalizeVectorCoord(PredictedVal);
     }
     
@@ -310,8 +350,7 @@ function drawSkeleton() {
 //pose comparison code
 function comparePoses() { 
    
-        // let epsilon = -99; 
-       // console.log(Object.keys(PredictedVal));
+    return new Promise((resolve,reject)=>{
         let i; 
         ComparisonResult = []; 
         let diffx = 0; 
@@ -357,7 +396,11 @@ function comparePoses() {
         ComparisonResult = ComparisonResult.sort(function(a,b) { 
         return a[0] - b[0]; 
         }); 
-        console.log(ComparisonResult) 
+       return resolve(ComparisonResult);
+    })
+        // let epsilon = -99; 
+       // console.log(Object.keys(PredictedVal));
+       
     
    
     }
