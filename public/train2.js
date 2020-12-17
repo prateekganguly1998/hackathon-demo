@@ -93,6 +93,7 @@ color_code = {
 function setup() {
   
     speech= new SpeechSynthesisUtterance();
+   
     speech.lang = "en-US";
     speech.volume = 1;
     speech.rate = 1;
@@ -102,12 +103,6 @@ function setup() {
     video.hide();
 
     //timer stuff//
-    const now=new Date().getTime()
-    const deadLine= new Date(now+5*60000).getTime();
-    let t=deadLine - now;
-    let minutes=Math.floor((t%(1000*60*60))/(1000*60))
-    let seconds=Math.floor((t%(1000*60))/(1000*60));
-    console.log(`${minutes}: ${seconds}`);
     //--------------------//
     let poseNetOptions={
         
@@ -126,7 +121,7 @@ function setup() {
     //set the dynamic image link here in image 2//
     img2=createImg('https://www.verywellfit.com/thmb/Sgy_FHtDtEl8wctggFasfjH3rhg=/3000x2000/filters:fill(FFDB5D,1)/About-50-4111744-Tree-Pose02-641-5c4b762cc9e77c00016f33b6.jpg',image2Ready);
     img2.size(640,480);
-    
+    img2.style('transform',"scaleX(-1)")
     img2.elt.crossOrigin="Anonymous";
     img2.style('position','absolute');
   
@@ -224,6 +219,8 @@ function modelLoaded()
                 isPartProper.push({part:result[i][1],value:true});
             }
         }
+          var voices = speechSynthesis.getVoices();
+          speech.voice=voices[3];
 //        console.log('Part',isPartProper);
            speech.text=giveInstructions(result);
            if(speech.text!=="undefined")
