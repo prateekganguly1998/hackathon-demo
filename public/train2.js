@@ -2,8 +2,8 @@ let img2;
 let video;
 let poseNet;let poseNet2; 
 let poses2=[];
+let speech;
 let isPartProper=[];
-let chartData=[];
 let epsilon=0.05;
 let pose;
 color_code = {
@@ -96,7 +96,11 @@ function setup() {
     // img.elt.crossOrigin="Anonymous";
     // img.style('z-index','-5');
     // img.style('position','absolute')
-
+    speech= new SpeechSynthesisUtterance();
+    speech.lang = "en-US";
+    speech.volume = 1;
+    speech.rate = 1;
+    speech.pitch = 1; 
     createCanvas(640,480);
     video=createCapture(VIDEO);
     video.hide();
@@ -116,18 +120,19 @@ function setup() {
     poseNet.on('pose',gotPoses);
     // leftBuffer=createGraphics(640,480);
     // rightBuffer=createGraphics(640,480);
-    img2=createImg('https://www.gaia.com/wp-content/uploads/ChairPose-NicoLuce.jpg',image2Ready);
+    img2=createImg('https://www.verywellfit.com/thmb/Sgy_FHtDtEl8wctggFasfjH3rhg=/3000x2000/filters:fill(FFDB5D,1)/About-50-4111744-Tree-Pose02-641-5c4b762cc9e77c00016f33b6.jpg',image2Ready);
     img2.size(640,480);
     // img2.style('margin-left','640px');
     // img2.style('margin-top','-480px');
     img2.elt.crossOrigin="Anonymous";
     img2.style('position','absolute');
-
+  
     // assign poseNet
     
     //img.hide(); // hide the image in the browser
    // frameRate(1); // set the frameRate to 1 since we don't need it to be running quickly in this case
 }
+
 function image2Ready()
 {
    // console.log(img2);
@@ -144,7 +149,7 @@ function image2Ready()
     // This sets up an event that listens to 'pose' events
     poseNet2.on('pose', function (results) {
         poses2 = results;
-        console.log(poses2);
+       // console.log(poses2);
         let currentPose = poses2[0].pose;
         for (let j = 0; j < Object.keys(currentPose).length-1; j++) { 
             let keypointj = Object.keys(currentPose)[j+2];
@@ -190,8 +195,6 @@ function gotPoses(poses)
     // 
   
 }
-//calculate distance for chart//
-
 function modelLoaded()
 { select('#status').html('Model Loaded');
     console.log(`Posenet is ready`);
@@ -202,17 +205,16 @@ function modelLoaded()
    setInterval(function()
    { 
     PredictedVal=normalizeVectorCoord(PredictedVal);
-    //console.log(PredictedVal);
    let comparePosePromise= comparePoses();
    comparePosePromise.then(result=>
     {
-      //  console.log(result);
+        //console.log('Ressult',result);
         isPartProper=[];
         for(let i=0;i<17;i++)
         {
           
             //console.log(result[i][2], epsilon);
-            console.log(result[i][2],result[i][3],epsilon);
+            //console.log(result[i][2],result[i][3],epsilon);
             if(result[i][2]>epsilon ||result[i][2]<-epsilon&&result[i][3]>epsilon||result[i][3]<-epsilon)
             {
                 
@@ -223,7 +225,35 @@ function modelLoaded()
                 isPartProper.push({part:result[i][1],value:true});
             }
         }
-       // console.log(isPartProper);
+//        console.log('Part',isPartProper);
+            for(i = 5; i < 17; i++){
+              //  console.log(result[i][1]+" "+result[i][2]+" "+result[i][3]);
+                if(result[i][2]>epsilon ||result[i][2]<-epsilon&&result[i][3]>epsilon||result[i][3]<-epsilon)
+                {
+    
+                    if(abs(result[i][2]) > abs(result[i][3])){
+                        if(result[i][2]>0){
+                            speech.text = "Move your "+result[i][1]+" to the right";
+                             window.speechSynthesis.speak(speech);
+                        }
+                        else{
+                            speech.text = "Move your "+result[i][1]+" to the left";
+                             window.speechSynthesis.speak(speech);
+                        }
+                    }
+                    else{
+                        if(result[i][3]>0){
+                            speech.text = "Move your "+result[i][1]+" down";
+                             window.speechSynthesis.speak(speech);
+                        }
+                        else{
+                            speech.text = "Move your "+result[i][1]+" up";
+                             window.speechSynthesis.speak(speech);
+                        }
+                    }
+                }
+            }
+    
     })
    },3000);
  
@@ -232,7 +262,7 @@ function modelLoaded()
 function normalizeVectorCoord(Val) 
 { 
    
- console.log(Val) 
+ //console.log(Val) 
         let x,y; 
         x= 0; 
         y = 0; 
@@ -407,3 +437,4 @@ function comparePoses() {
     
    
     }
+
