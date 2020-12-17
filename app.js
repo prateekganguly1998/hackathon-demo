@@ -9,7 +9,7 @@ router.get('/',function(req,res){
   //__dirname : It will resolve to your project folder.
 });
 router.get('/train',function(req,res){
-  res.sendFile(path.join(__dirname,'learn.html'));
+  return res.render(path.join(__dirname,'learn.ejs'),{data:'https://g9y8d2h3.rocketcdn.me/wp-content/uploads/2019/05/Awkward-Pose-1-1024x576.jpg'});
   //__dirname : It will resolve to your project folder.
 });
 app.use('/', router);

@@ -91,9 +91,9 @@ color_code = {
         color_code_keys = Object.keys(color_code); 
     
 function setup() {
-  
+ 
+
     speech= new SpeechSynthesisUtterance();
-   
     speech.lang = "en-US";
     speech.volume = 1;
     speech.rate = 1;
